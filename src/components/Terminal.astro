@@ -1,0 +1,560 @@
+---
+import { getCollection } from 'astro:content';
+import { categoryKeys } from '../data/categories';
+
+const allProjects = await getCollection('projects', ({ data }) => !data.draft);
+
+const clientData = JSON.stringify({
+  projects: allProjects.map((p) => ({
+    id: p.id,
+    title: p.data.title,
+    desc: p.data.description,
+    category: p.data.category,
+    tags: p.data.tags,
+    year: p.data.year,
+    hasWriteup: (p.body?.trim().length ?? 0) > 0,
+  })),
+  allTags: [...new Set(allProjects.flatMap((p) => p.data.tags))].sort(),
+  categoryKeys,
+});
+---
+
+<div class="terminal" id="terminal" data-state={clientData}>
+  <div class="terminal-bar">
+    <span class="filename">projects ~ filter</span>
+    <span class="hint">
+      try <kbd>help</kbd> · <kbd>tag:fpga</kbd> · <kbd>read httpedia</kbd>
+    </span>
+  </div>
+  <div class="terminal-filter-line" id="filterLine"></div>
+  <div class="terminal-history" id="termHistory"></div>
+  <div class="terminal-prompt" id="termPrompt">
+    <span class="promptstr">
+      <span class="user">sam</span><span class="at">@</span
+      ><span class="host">samwarr.dev</span><span class="arrow"> ❯</span>
+    </span>
+    <input
+      class="terminal-input"
+      id="termInput"
+      placeholder="type a command, or just type to search…"
+      autocomplete="off"
+      spellcheck="false"
+    />
+  </div>
+</div>
+
+<div class="results-meta" id="resultsMeta">
+  {allProjects.length} projects · all categories
+</div>
+
+<style>
+  .terminal {
+    border: 1px solid var(--border);
+    background: var(--term-bg);
+    margin-bottom: 48px;
+    font-family: 'Geist Mono', ui-monospace, monospace;
+    font-size: 13px;
+    transition: border-color 0.15s;
+    overflow: hidden;
+  }
+
+  .terminal:focus-within {
+    border-color: var(--border-strong);
+  }
+
+  .terminal-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 14px;
+    background: var(--bg-elev);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--fg-subtle);
+  }
+
+  .terminal-bar .filename { color: var(--fg-muted); }
+
+  .terminal-bar .hint {
+    margin-left: auto;
+    letter-spacing: 0.02em;
+  }
+
+  .terminal-bar .hint kbd {
+    background: var(--bg);
+    border: 1px solid var(--border-strong);
+    padding: 1px 5px;
+    font-size: 10px;
+    color: var(--fg-muted);
+    border-radius: 2px;
+  }
+
+  .terminal-history {
+    padding: 0 16px;
+    max-height: 0;
+    overflow-y: auto;
+    transition: max-height 0.2s ease, padding 0.2s ease;
+  }
+
+  .terminal-history.has-content {
+    max-height: 280px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .terminal-prompt {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    gap: 10px;
+  }
+
+  .terminal-prompt .promptstr {
+    color: var(--fg-subtle);
+    user-select: none;
+    flex-shrink: 0;
+  }
+
+  .terminal-prompt .promptstr .user { color: var(--ok); }
+  .terminal-prompt .promptstr .at { color: var(--fg-subtle); }
+  .terminal-prompt .promptstr .host { color: var(--info); }
+  .terminal-prompt .promptstr .arrow { color: var(--fg-muted); margin-left: 4px; }
+
+  .terminal-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    font: inherit;
+    color: var(--fg);
+    caret-color: var(--fg);
+  }
+
+  .terminal-input::placeholder { color: var(--fg-subtle); }
+
+  .terminal-filter-line {
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--fg-subtle);
+    font-size: 11px;
+    display: none;
+  }
+
+  .terminal-filter-line.active { display: block; }
+
+  .results-meta {
+    font-family: 'Geist Mono', ui-monospace, monospace;
+    font-size: 11px;
+    color: var(--fg-subtle);
+    margin-bottom: 16px;
+    letter-spacing: 0.03em;
+  }
+
+  @media (max-width: 600px) {
+    .terminal-bar .hint { display: none; }
+  }
+
+  :global(.term-line) {
+    padding: 2px 0;
+    color: var(--fg-muted);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  :global(.term-line.cmd) { color: var(--fg); }
+  :global(.term-line.cmd::before) {
+    content: '❯ ';
+    color: var(--fg-subtle);
+  }
+  :global(.term-line.ok) { color: var(--ok); }
+  :global(.term-line.err) { color: var(--err); }
+  :global(.term-line.info) { color: var(--info); }
+  :global(.term-line.hint) { color: var(--fg-subtle); font-style: italic; }
+  :global(.term-line a) {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: var(--border-strong);
+    text-underline-offset: 2px;
+  }
+  :global(.term-line a:hover) {
+    text-decoration-color: currentColor;
+  }
+  :global(.filter-pill) {
+    display: inline-block;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 1px 8px;
+    margin-right: 4px;
+    color: var(--fg-muted);
+    cursor: pointer;
+  }
+  :global(.filter-pill:hover) {
+    color: var(--err);
+    border-color: var(--err);
+  }
+  :global(.filter-pill::after) {
+    content: ' ×';
+    opacity: 0.5;
+  }
+</style>
+
+<script>
+  type Project = {
+    id: string;
+    title: string;
+    desc: string;
+    category: string;
+    tags: string[];
+    year: string;
+    hasWriteup: boolean;
+  };
+
+  const term = document.getElementById('terminal');
+  if (term) {
+    const data = JSON.parse(term.dataset.state!);
+    const allProjects: Project[] = data.projects;
+    const allTags: string[] = data.allTags;
+    const CATEGORIES: string[] = data.categoryKeys;
+
+    const termHistory = document.getElementById('termHistory')!;
+    const termInput = document.getElementById('termInput') as HTMLInputElement;
+    const filterLine = document.getElementById('filterLine')!;
+    const resultsMeta = document.getElementById('resultsMeta')!;
+
+    const state = {
+      tags: new Set<string>(),
+      years: new Set<string>(),
+      categories: new Set<string>(),
+      search: '',
+    };
+
+    const cmdHistory: string[] = [];
+    let historyIdx = -1;
+
+    function projectEl(id: string): HTMLElement | null {
+      return document.querySelector(`.project[data-id="${id}"]`);
+    }
+
+    function escape(s: string): string {
+      return String(s).replace(/[&<>"']/g, (c) =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!)
+      );
+    }
+
+    function logLine(html: string, klass = '') {
+      const div = document.createElement('div');
+      div.className = 'term-line ' + klass;
+      div.innerHTML = html;
+      termHistory.appendChild(div);
+      termHistory.classList.add('has-content');
+      termHistory.scrollTop = termHistory.scrollHeight;
+    }
+
+    function clearHistory() {
+      termHistory.innerHTML = '';
+      termHistory.classList.remove('has-content');
+    }
+
+    function applyFilters() {
+      let count = 0;
+      allProjects.forEach((p) => {
+        const el = projectEl(p.id);
+        if (!el) return;
+        const tagOk =
+          state.tags.size === 0 || [...state.tags].every((t) => p.tags.includes(t));
+        const yearOk =
+          state.years.size === 0 ||
+          state.years.has(p.year) ||
+          [...state.years].some((y) => p.year.startsWith(y));
+        const catOk =
+          state.categories.size === 0 || state.categories.has(p.category);
+        const searchOk =
+          !state.search ||
+          p.title.toLowerCase().includes(state.search) ||
+          p.desc.toLowerCase().includes(state.search) ||
+          p.tags.some((t) => t.includes(state.search));
+        const show = tagOk && yearOk && catOk && searchOk;
+        el.classList.toggle('hidden', !show);
+        if (show) count++;
+      });
+      document.querySelectorAll('.group').forEach((g) => {
+        const visible = g.querySelectorAll('.project:not(.hidden)').length;
+        g.classList.toggle('hidden', visible === 0);
+      });
+      updateMeta(count);
+      renderFilterLine();
+    }
+
+    function updateMeta(count: number) {
+      const filters: string[] = [];
+      if (state.tags.size) filters.push([...state.tags].map((t) => `tag:${t}`).join(' '));
+      if (state.years.size) filters.push([...state.years].map((y) => `year:${y}`).join(' '));
+      if (state.categories.size) filters.push([...state.categories].map((c) => `cat:${c}`).join(' '));
+      if (state.search) filters.push(`"${state.search}"`);
+      const filterStr = filters.length ? filters.join(' · ') : 'all categories';
+      resultsMeta.textContent = `${count} project${count === 1 ? '' : 's'} · ${filterStr}`;
+    }
+
+    function renderFilterLine() {
+      const pills: { type: string; val: string }[] = [
+        ...[...state.tags].map((t) => ({ type: 'tag', val: t })),
+        ...[...state.years].map((y) => ({ type: 'year', val: y })),
+        ...[...state.categories].map((c) => ({ type: 'cat', val: c })),
+        ...(state.search ? [{ type: 'search', val: state.search }] : []),
+      ];
+      if (!pills.length) {
+        filterLine.classList.remove('active');
+        filterLine.innerHTML = '';
+        return;
+      }
+      filterLine.classList.add('active');
+      filterLine.innerHTML =
+        'filters: ' +
+        pills
+          .map(
+            (p) =>
+              `<span class="filter-pill" data-type="${p.type}" data-val="${escape(p.val)}">${p.type}:${escape(p.val)}</span>`
+          )
+          .join('');
+      filterLine.querySelectorAll('.filter-pill').forEach((pill) => {
+        pill.addEventListener('click', () => {
+          const el = pill as HTMLElement;
+          const { type, val } = el.dataset;
+          if (type === 'tag') state.tags.delete(val!);
+          else if (type === 'year') state.years.delete(val!);
+          else if (type === 'cat') state.categories.delete(val!);
+          else if (type === 'search') state.search = '';
+          applyFilters();
+        });
+      });
+    }
+
+    function scrollToProject(id: string): boolean {
+      const el = projectEl(id);
+      if (!el) return false;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('flash');
+      setTimeout(() => el.classList.remove('flash'), 800);
+      return true;
+    }
+
+    function readWriteup(id: string): { ok: boolean; reason?: string } {
+      const project = allProjects.find((p) => p.id === id);
+      if (!project) return { ok: false, reason: 'not-found' };
+      if (!project.hasWriteup) return { ok: false, reason: 'no-writeup' };
+      window.location.href = `/projects/${id}/`;
+      return { ok: true };
+    }
+
+    const COMMANDS: Record<string, () => void> = {
+      help: () => {
+        logLine('available commands:', 'info');
+        logLine('  <span class="mono">tag:&lt;name&gt;</span>     filter by tag (composable)');
+        logLine('  <span class="mono">year:&lt;n&gt;</span>       filter by year');
+        logLine('  <span class="mono">cat:&lt;name&gt;</span>     filter by category — hardware, infra, software, security');
+        logLine('  <span class="mono">search &lt;text&gt;</span>  free-text search across titles and descriptions');
+        logLine('  <span class="mono">open &lt;id&gt;</span>      scroll to a project on this page');
+        logLine('  <span class="mono">read &lt;id&gt;</span>      open the project writeup (if one exists)');
+        logLine('  <span class="mono">ls</span>               list all projects');
+        logLine('  <span class="mono">writeups</span>         list projects with writeups');
+        logLine('  <span class="mono">tags</span>             list all available tags');
+        logLine('  <span class="mono">whoami</span>           about me');
+        logLine('  <span class="mono">clear</span>            reset filters and history');
+        logLine('  <span class="mono">reset</span>            reset filters only');
+        logLine('', 'hint');
+        logLine('tip: filters compose. <span class="mono">tag:radio</span> then <span class="mono">year:2024</span> narrows further.', 'hint');
+      },
+      ls: () => {
+        const visible = allProjects.filter((p) => {
+          const el = projectEl(p.id);
+          return el && !el.classList.contains('hidden');
+        });
+        if (!visible.length) {
+          logLine('no matches', 'err');
+          return;
+        }
+        visible.forEach((p) => {
+          const marker = p.hasWriteup ? '●' : '○';
+          logLine(
+            `  ${marker} ${p.year.padEnd(10)} <a href="#" data-open="${p.id}">${escape(p.title)}</a>  <span style="color:var(--fg-subtle)">[${p.tags.join(', ')}]</span>`
+          );
+        });
+        logLine(`<span class="hint">// ${visible.length} project${visible.length === 1 ? '' : 's'} · ● has writeup · ○ no writeup yet</span>`);
+      },
+      writeups: () => {
+        const written = allProjects.filter((p) => p.hasWriteup);
+        if (!written.length) {
+          logLine('no writeups yet', 'hint');
+          return;
+        }
+        logLine('projects with writeups:', 'info');
+        written.forEach((p) => {
+          logLine(
+            `  ${p.year.padEnd(10)} <a href="/projects/${p.id}/">${escape(p.title)}</a>`
+          );
+        });
+      },
+      tags: () => {
+        logLine('available tags:', 'info');
+        logLine('  ' + allTags.join(' · '));
+      },
+      whoami: () => {
+        logLine('sam warr', 'info');
+        logLine('  byu · it&amp;c + ecen · provo, utah');
+        logLine('  interests: cybersecurity, fpgas, vintage computing, ham radio, self-hosting');
+      },
+      reset: () => {
+        state.tags.clear();
+        state.years.clear();
+        state.categories.clear();
+        state.search = '';
+        applyFilters();
+        logLine('filters cleared', 'ok');
+      },
+      clear: () => {
+        state.tags.clear();
+        state.years.clear();
+        state.categories.clear();
+        state.search = '';
+        applyFilters();
+        clearHistory();
+      },
+    };
+
+    function runCommand(raw: string) {
+      const input = raw.trim();
+      if (!input) return;
+      cmdHistory.push(input);
+      historyIdx = cmdHistory.length;
+      logLine(escape(input), 'cmd');
+
+      if (COMMANDS[input]) {
+        COMMANDS[input]();
+        return;
+      }
+
+      const openMatch = input.match(/^open\s+(.+)$/i);
+      if (openMatch) {
+        const id = openMatch[1].trim();
+        const ok = scrollToProject(id);
+        logLine(ok ? `→ opened ${id}` : `no project with id "${id}"`, ok ? 'ok' : 'err');
+        return;
+      }
+
+      const readMatch = input.match(/^read\s+(.+)$/i);
+      if (readMatch) {
+        const id = readMatch[1].trim();
+        const result = readWriteup(id);
+        if (result.ok) {
+          logLine(`→ opening writeup for ${id}…`, 'ok');
+        } else if (result.reason === 'not-found') {
+          logLine(`no project with id "${id}"`, 'err');
+        } else {
+          logLine(`no writeup yet for "${id}". try <span class="mono">writeups</span> to see what's available.`, 'err');
+        }
+        return;
+      }
+
+      const searchMatch = input.match(/^search\s+(.+)$/i);
+      if (searchMatch) {
+        state.search = searchMatch[1].toLowerCase().trim();
+        applyFilters();
+        const count = allProjects.filter((p) => {
+          const el = projectEl(p.id);
+          return el && !el.classList.contains('hidden');
+        }).length;
+        logLine(`→ ${count} match${count === 1 ? '' : 'es'} for "${escape(state.search)}"`, count ? 'ok' : 'err');
+        return;
+      }
+
+      const kv = input.match(/^(tag|year|cat|category):(.+)$/i);
+      if (kv) {
+        const key = kv[1].toLowerCase();
+        const val = kv[2].trim().toLowerCase();
+        if (key === 'tag') {
+          if (!allTags.includes(val)) {
+            logLine(`unknown tag "${val}". try <span class="mono">tags</span> for the list.`, 'err');
+            return;
+          }
+          state.tags.add(val);
+          logLine(`→ added tag:${val}`, 'ok');
+        } else if (key === 'year') {
+          state.years.add(val);
+          logLine(`→ added year:${val}`, 'ok');
+        } else if (key === 'cat' || key === 'category') {
+          if (!CATEGORIES.includes(val)) {
+            logLine(`unknown category "${val}". try: ${CATEGORIES.join(', ')}`, 'err');
+            return;
+          }
+          state.categories.add(val);
+          logLine(`→ added cat:${val}`, 'ok');
+        }
+        applyFilters();
+        const count = allProjects.filter((p) => {
+          const el = projectEl(p.id);
+          return el && !el.classList.contains('hidden');
+        }).length;
+        logLine(`  ${count} project${count === 1 ? '' : 's'} now visible`, 'hint');
+        return;
+      }
+
+      state.search = input.toLowerCase();
+      applyFilters();
+      const count = allProjects.filter((p) => {
+        const el = projectEl(p.id);
+        return el && !el.classList.contains('hidden');
+      }).length;
+      if (count) {
+        logLine(`→ ${count} match${count === 1 ? '' : 'es'} for "${escape(input)}"`, 'ok');
+      } else {
+        logLine(`no matches for "${escape(input)}". try <span class="mono">help</span>.`, 'err');
+      }
+    }
+
+    termInput.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        runCommand(termInput.value);
+        termInput.value = '';
+      } else if (e.key === 'ArrowUp') {
+        if (cmdHistory.length === 0) return;
+        e.preventDefault();
+        historyIdx = Math.max(0, historyIdx - 1);
+        termInput.value = cmdHistory[historyIdx] || '';
+      } else if (e.key === 'ArrowDown') {
+        if (cmdHistory.length === 0) return;
+        e.preventDefault();
+        historyIdx = Math.min(cmdHistory.length, historyIdx + 1);
+        termInput.value = cmdHistory[historyIdx] || '';
+      } else if (e.key === 'l' && e.ctrlKey) {
+        e.preventDefault();
+        clearHistory();
+      }
+    });
+
+    term.addEventListener('click', (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName !== 'A' && !target.classList.contains('filter-pill')) {
+        termInput.focus();
+      }
+    });
+
+    termHistory.addEventListener('click', (e: Event) => {
+      const link = (e.target as HTMLElement).closest('[data-open]') as HTMLElement | null;
+      if (link) {
+        e.preventDefault();
+        scrollToProject(link.dataset.open!);
+      }
+    });
+
+    document.querySelectorAll('.project .tag').forEach((t) => {
+      t.addEventListener('click', () => {
+        const tag = (t.textContent || '').trim();
+        if (!allTags.includes(tag)) return;
+        state.tags.add(tag);
+        applyFilters();
+        logLine(`<span class="hint">// clicked tag in project list</span>`, 'hint');
+        logLine(`tag:${tag}`, 'cmd');
+        logLine(`→ added tag:${tag}`, 'ok');
+      });
+    });
+  }
+</script>
