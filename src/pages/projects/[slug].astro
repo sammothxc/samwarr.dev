@@ -1,0 +1,293 @@
+---
+import { getCollection, render } from 'astro:content';
+import { execSync } from 'node:child_process';
+import path from 'node:path';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Footer from '../../components/Footer.astro';
+import { categories } from '../../data/categories';
+
+// Static generation: one page per project, but only for those with a writeup body
+export async function getStaticPaths() {
+  const projects = await getCollection('projects', ({ data }) => !data.draft);
+  return projects
+    .filter((p) => (p.body?.trim().length ?? 0) > 0)
+    .map((p) => ({
+      params: { slug: p.id },
+      props: { project: p },
+    }));
+}
+
+const { project } = Astro.props;
+const { Content } = await render(project);
+const cat = categories[project.data.category];
+
+function gitLastUpdated(projectId: string): string | null {
+  const filePath = path.join('src/content/projects', `${projectId}.md`);
+  try {
+    const out = execSync(`git log -1 --format=%cI -- "${filePath}"`, {
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'ignore'],
+    }).trim();
+    return out ? out.slice(0, 10) : null;
+  } catch {
+    return null;
+  }
+}
+
+const lastUpdated = gitLastUpdated(project.id) ?? project.data.writeupDate ?? null;
+---
+
+<BaseLayout
+  title={`${project.data.title} — Sam Warr`}
+  description={project.data.description}
+>
+  <main>
+    <div class="breadcrumb">
+      <a href="/">← samwarr.dev</a> / projects / {project.id}
+    </div>
+
+    <header class="writeup-header">
+      <div class="cat">{cat.label}</div>
+      <h1>{project.data.title}</h1>
+      <p class="description">{project.data.description}</p>
+      <dl class="meta">
+        <dt>year</dt>
+        <dd class="mono">{project.data.yearLabel}</dd>
+        <dt>tags</dt>
+        <dd class="mono">{project.data.tags.join(' · ')}</dd>
+        {lastUpdated && (
+          <>
+            <dt>last updated</dt>
+            <dd class="mono">{lastUpdated}</dd>
+          </>
+        )}
+        {(project.data.live || project.data.repo) && (
+          <>
+            <dt>links</dt>
+            <dd class="mono">
+              {project.data.live && <a href={project.data.live}>live ↗</a>}
+              {project.data.live && project.data.repo && ' · '}
+              {project.data.repo && <a href={project.data.repo}>repo ↗</a>}
+            </dd>
+          </>
+        )}
+      </dl>
+    </header>
+
+    <article class="prose">
+      <Content />
+    </article>
+
+    <Footer />
+  </main>
+</BaseLayout>
+
+<style>
+  .breadcrumb {
+    font-family: 'Geist Mono', ui-monospace, monospace;
+    font-size: 12px;
+    color: var(--fg-subtle);
+    margin-bottom: 48px;
+  }
+
+  .breadcrumb a {
+    color: var(--fg-muted);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+
+  .breadcrumb a:hover {
+    color: var(--fg);
+    border-bottom-color: var(--fg);
+  }
+
+  .writeup-header {
+    margin-bottom: 20px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .cat {
+    font-family: 'Geist Mono', ui-monospace, monospace;
+    font-size: 11px;
+    color: var(--fg-subtle);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+
+  .description {
+    color: var(--fg-muted);
+    margin-bottom: 24px;
+    max-width: 56ch;
+  }
+
+  .meta {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 4px 16px;
+    font-size: 12px;
+  }
+
+  .meta dt {
+    color: var(--fg-subtle);
+    font-family: 'Geist Mono', ui-monospace, monospace;
+    letter-spacing: 0.02em;
+  }
+
+  .meta dd {
+    color: var(--fg);
+    font-size: 12px;
+  }
+
+  .meta a {
+    color: var(--fg-muted);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border);
+    transition: color 0.15s, border-color 0.15s;
+  }
+
+  .meta a:hover {
+    color: var(--fg);
+    border-bottom-color: var(--fg);
+  }
+
+  /* Prose styles for markdown content */
+  .prose {
+    color: var(--fg);
+    line-height: 1.7;
+  }
+
+  .prose :global(h2) {
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    margin-top: 40px;
+    margin-bottom: 14px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .prose :global(h2:first-child) {
+    margin-top: 0;
+  }
+
+  .prose :global(h3) {
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Geist Mono', ui-monospace, monospace;
+    margin-top: 28px;
+    margin-bottom: 10px;
+    color: var(--fg);
+  }
+
+  .prose :global(p) {
+    margin-bottom: 16px;
+    max-width: 64ch;
+  }
+
+  .prose :global(a) {
+    color: var(--fg);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border-strong);
+    transition: border-color 0.15s;
+  }
+
+  .prose :global(a:hover) {
+    border-bottom-color: var(--fg);
+  }
+
+  .prose :global(strong) {
+    font-weight: 500;
+    color: var(--fg);
+  }
+
+  .prose :global(em) {
+    font-style: italic;
+  }
+
+  .prose :global(code) {
+    font-family: 'Geist Mono', ui-monospace, monospace;
+    font-size: 13px;
+    background: var(--bg-elev);
+    padding: 1px 6px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+  }
+
+  .prose :global(pre) {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    padding: 16px 20px;
+    margin: 20px 0;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.5;
+    border-radius: 2px;
+  }
+
+  .prose :global(pre code) {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: inherit;
+  }
+
+  .prose :global(ul),
+  .prose :global(ol) {
+    margin: 16px 0 16px 24px;
+  }
+
+  .prose :global(li) {
+    margin-bottom: 6px;
+  }
+
+  .prose :global(blockquote) {
+    border-left: 2px solid var(--border-strong);
+    padding-left: 16px;
+    margin: 20px 0;
+    color: var(--fg-muted);
+    font-style: italic;
+  }
+
+  .prose :global(hr) {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 32px 0;
+  }
+
+  .prose :global(img) {
+    max-width: 100%;
+    border: 1px solid var(--border);
+    margin: 20px 0;
+  }
+
+  main {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  @media (max-width: 600px) {
+    .meta {
+      grid-template-columns: 1fr;
+      gap: 2px;
+    }
+    .meta dt {
+      margin-top: 8px;
+    }
+    h1 {
+      font-size: 24px;
+    }
+  }
+</style>
