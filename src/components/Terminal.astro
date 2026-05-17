@@ -264,7 +264,7 @@ const clientData = JSON.stringify({
         const yearOk =
           state.years.size === 0 ||
           state.years.has(p.year) ||
-          [...state.years].some((y) => p.year.startsWith(y));
+          [...state.years].some((y) => p.year.toLowerCase().includes(y.toLowerCase()));
         const catOk =
           state.categories.size === 0 || state.categories.has(p.category);
         const searchOk =

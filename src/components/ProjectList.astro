@@ -2,9 +2,18 @@
 import { getCollection } from 'astro:content';
 import { categories, categoryKeys } from '../data/categories';
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
 const allProjects = (await getCollection('projects', ({ data }) => !data.draft))
   .sort((a, b) => {
-    const key = (y: string) => y === 'ongoing' ? Infinity : (parseInt(y, 10) || 0);
+    const key = (s: string) => {
+      if (s === 'ongoing') return Infinity;
+      const [mon, yr] = s.split(' ');
+      const m = MONTHS.indexOf(mon);
+      const y = parseInt(yr, 10);
+      if (isNaN(y)) return 0;
+      return y * 12 + (m >= 0 ? m : 0);
+    };
     return key(b.data.year) - key(a.data.year);
   });
 
@@ -24,10 +33,11 @@ const grouped = categoryKeys.map((key) => ({
     grouped.map((group) =>
       group.projects.length === 0 ? null : (
         <section class="group" data-category={group.key}>
-          <div class="group-header">
+          <button class="group-header" type="button" aria-expanded="true">
+            <span class="chevron" aria-hidden="true">▸</span>
             <h2>{group.label}</h2>
             <span class="group-id">{group.id}</span>
-          </div>
+          </button>
           {group.projects.map((p) => {
             const writeup = hasWriteup(p);
             const links: { label: string; href: string }[] = [];
@@ -86,8 +96,28 @@ const grouped = categoryKeys.map((key) => ({
     display: flex;
     align-items: baseline;
     gap: 12px;
-    padding-bottom: 8px;
+    padding: 0 0 8px 0;
+    margin: 0;
+    width: 100%;
+    background: none;
+    border: none;
     border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+  }
+
+  .group-header .chevron {
+    font-size: 10px;
+    color: var(--fg-subtle);
+    transition: transform 0.15s ease;
+    display: inline-block;
+    width: 10px;
+  }
+
+  .group-header[aria-expanded="true"] .chevron {
+    transform: rotate(90deg);
   }
 
   .group-header h2 {
@@ -103,6 +133,8 @@ const grouped = categoryKeys.map((key) => ({
     font-size: 11px;
     color: var(--fg-subtle);
   }
+
+  .group.collapsed .project { display: none; }
 
   .project {
     display: grid;
@@ -199,3 +231,13 @@ const grouped = categoryKeys.map((key) => ({
     }
   }
 </style>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('.group-header').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const expanded = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', String(!expanded));
+      btn.closest('.group')?.classList.toggle('collapsed');
+    });
+  });
+</script>
