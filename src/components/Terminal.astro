@@ -341,7 +341,7 @@ const clientData = JSON.stringify({
       const project = allProjects.find((p) => p.id === id);
       if (!project) return { ok: false, reason: 'not-found' };
       if (!project.hasWriteup) return { ok: false, reason: 'no-writeup' };
-      window.location.href = `/projects/${id}/`;
+      window.location.href = `/projects/${id}`;
       return { ok: true };
     }
 
@@ -389,7 +389,7 @@ const clientData = JSON.stringify({
         logLine('projects with details:', 'info');
         written.forEach((p) => {
           logLine(
-            `  ${p.year.padEnd(10)} <a href="/projects/${p.id}/">${escape(p.title)}</a>`
+            `  ${p.year.padEnd(10)} <a href="/projects/${p.id}">${escape(p.title)}</a>`
           );
         });
       },

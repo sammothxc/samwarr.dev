@@ -31,7 +31,7 @@ const grouped = categoryKeys.map((key) => ({
           {group.projects.map((p) => {
             const writeup = hasWriteup(p);
             const links: { label: string; href: string }[] = [];
-            if (writeup) links.push({ label: 'details', href: `/projects/${p.id}/` });
+            if (writeup) links.push({ label: 'details', href: `/projects/${p.id}` });
             if (p.data.live) links.push({ label: 'live', href: p.data.live });
             if (p.data.repo) links.push({ label: 'repo', href: p.data.repo });
 
