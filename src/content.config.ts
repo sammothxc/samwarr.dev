@@ -6,7 +6,7 @@ const projects = defineCollection({
   schema: z.object({
     title: z.string(),
     description: z.string(),
-    category: z.enum(['category1', 'category2', 'category3', 'category4']),
+    category: z.enum(['hardware', 'software', 'infrastructure', 'cybersecurity']),
     tags: z.array(z.string()),
     year: z.string(),
     live: z.string().url().optional(),
