@@ -11,6 +11,4 @@ writeupDate: "2026-05-16"
 draft: false
 ---
 
-# Project Title
-
-Writeup in Markdown style here.
+Project details in Markdown style here.
