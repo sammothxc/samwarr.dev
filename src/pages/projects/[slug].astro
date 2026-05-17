@@ -52,7 +52,7 @@ const lastUpdated = gitLastUpdated(project.id) ?? project.data.lastUpdated ?? nu
       <p class="description">{project.data.description}</p>
       <dl class="meta">
         <dt>year</dt>
-        <dd class="mono">{project.data.yearLabel}</dd>
+        <dd class="mono">{project.data.year}</dd>
         <dt>tags</dt>
         <dd class="mono">{project.data.tags.join(' · ')}</dd>
         {lastUpdated && (

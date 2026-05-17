@@ -9,7 +9,6 @@ const projects = defineCollection({
     category: z.enum(['category1', 'category2', 'category3', 'category4']),
     tags: z.array(z.string()),
     year: z.string(),
-    yearLabel: z.string(),
     live: z.string().url().optional(),
     repo: z.string().url().optional(),
     lastUpdated: z.string().optional(),
