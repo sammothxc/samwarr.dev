@@ -350,18 +350,18 @@ const clientData = JSON.stringify({
         logLine('available commands:', 'info');
         logLine('  <span class="mono">tag:&lt;name&gt;</span>     filter by tag (composable)');
         logLine('  <span class="mono">year:&lt;n&gt;</span>       filter by year');
-        logLine('  <span class="mono">cat:&lt;name&gt;</span>     filter by category — hardware, infra, software, security');
+        logLine('  <span class="mono">cat:&lt;name&gt;</span>     filter by category — category1, category2, category3, category4');
         logLine('  <span class="mono">search &lt;text&gt;</span>  free-text search across titles and descriptions');
         logLine('  <span class="mono">open &lt;id&gt;</span>      scroll to a project on this page');
-        logLine('  <span class="mono">read &lt;id&gt;</span>      open the project writeup (if one exists)');
+        logLine('  <span class="mono">read &lt;id&gt;</span>      open the project details (if one exists)');
         logLine('  <span class="mono">ls</span>               list all projects');
-        logLine('  <span class="mono">writeups</span>         list projects with writeups');
+        logLine('  <span class="mono">details</span>          list projects with details');
         logLine('  <span class="mono">tags</span>             list all available tags');
         logLine('  <span class="mono">whoami</span>           about me');
         logLine('  <span class="mono">clear</span>            reset filters and history');
         logLine('  <span class="mono">reset</span>            reset filters only');
         logLine('', 'hint');
-        logLine('tip: filters compose. <span class="mono">tag:radio</span> then <span class="mono">year:2024</span> narrows further.', 'hint');
+        logLine('tip: filters compose. <span class="mono">tag:radio</span> then <span class="mono">year:2026</span> narrows further.', 'hint');
       },
       ls: () => {
         const visible = allProjects.filter((p) => {
@@ -378,15 +378,15 @@ const clientData = JSON.stringify({
             `  ${marker} ${p.year.padEnd(10)} <a href="#" data-open="${p.id}">${escape(p.title)}</a>  <span style="color:var(--fg-subtle)">[${p.tags.join(', ')}]</span>`
           );
         });
-        logLine(`<span class="hint">// ${visible.length} project${visible.length === 1 ? '' : 's'} · ● has writeup · ○ no writeup yet</span>`);
+        logLine(`<span class="hint">// ${visible.length} project${visible.length === 1 ? '' : 's'} · ● has details · ○ no details yet</span>`);
       },
-      writeups: () => {
+      details: () => {
         const written = allProjects.filter((p) => p.hasWriteup);
         if (!written.length) {
-          logLine('no writeups yet', 'hint');
+          logLine('no details yet', 'hint');
           return;
         }
-        logLine('projects with writeups:', 'info');
+        logLine('projects with details:', 'info');
         written.forEach((p) => {
           logLine(
             `  ${p.year.padEnd(10)} <a href="/projects/${p.id}/">${escape(p.title)}</a>`
@@ -399,8 +399,8 @@ const clientData = JSON.stringify({
       },
       whoami: () => {
         logLine('sam warr', 'info');
-        logLine('  byu · it&amp;c + ecen · provo, utah');
-        logLine('  interests: cybersecurity, fpgas, vintage computing, ham radio, self-hosting');
+        logLine('  byu · cybersecurity · provo, utah');
+        logLine('  interests: cybersecurity, self-hosting, retrocomputing, fpgas, ham radio');
       },
       reset: () => {
         state.tags.clear();
@@ -445,11 +445,11 @@ const clientData = JSON.stringify({
         const id = readMatch[1].trim();
         const result = readWriteup(id);
         if (result.ok) {
-          logLine(`→ opening writeup for ${id}…`, 'ok');
+          logLine(`→ opening details for ${id}…`, 'ok');
         } else if (result.reason === 'not-found') {
           logLine(`no project with id "${id}"`, 'err');
         } else {
-          logLine(`no writeup yet for "${id}". try <span class="mono">writeups</span> to see what's available.`, 'err');
+          logLine(`no details yet for "${id}". try <span class="mono">details</span> to see what's available.`, 'err');
         }
         return;
       }

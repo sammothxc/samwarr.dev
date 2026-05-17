@@ -2,15 +2,14 @@
 import { getCollection } from 'astro:content';
 import { categories, categoryKeys } from '../data/categories';
 
-const allProjects = await getCollection('projects', ({ data }) => !data.draft);
+const allProjects = (await getCollection('projects', ({ data }) => !data.draft))
+  .sort((a, b) => {
+    const key = (y: string) => y === 'ongoing' ? Infinity : (parseInt(y, 10) || 0);
+    return key(b.data.year) - key(a.data.year);
+  });
 
 function hasWriteup(project: typeof allProjects[number]): boolean {
   return (project.body?.trim().length ?? 0) > 0;
-}
-
-function primaryHref(project: typeof allProjects[number]): string | null {
-  if (hasWriteup(project)) return `/projects/${project.id}/`;
-  return project.data.live ?? project.data.repo ?? null;
 }
 
 const grouped = categoryKeys.map((key) => ({
@@ -31,15 +30,10 @@ const grouped = categoryKeys.map((key) => ({
           </div>
           {group.projects.map((p) => {
             const writeup = hasWriteup(p);
-            const href = primaryHref(p);
             const links: { label: string; href: string }[] = [];
-            if (writeup) links.push({ label: 'writeup', href: `/projects/${p.id}/` });
+            if (writeup) links.push({ label: 'details', href: `/projects/${p.id}/` });
             if (p.data.live) links.push({ label: 'live', href: p.data.live });
             if (p.data.repo) links.push({ label: 'repo', href: p.data.repo });
-            // Hide the writeup link if the title already points there
-            const filteredLinks = links.filter(
-              (l) => !(l.label === 'writeup' && href === l.href)
-            );
 
             return (
               <article
@@ -53,7 +47,7 @@ const grouped = categoryKeys.map((key) => ({
                 <span class="year mono">{p.data.yearLabel}</span>
                 <div class="body">
                   <h3>
-                    {href ? <a href={href}>{p.data.title}</a> : <span>{p.data.title}</span>}
+                    <span>{p.data.title}</span>
                   </h3>
                   <p>{p.data.description}</p>
                   <div class="tags">
@@ -65,9 +59,9 @@ const grouped = categoryKeys.map((key) => ({
                     ))}
                   </div>
                 </div>
-                {filteredLinks.length > 0 && (
+                {links.length > 0 && (
                   <div class="links">
-                    {filteredLinks.map((l) => (
+                    {links.map((l) => (
                       <a href={l.href}>{l.label} →</a>
                     ))}
                   </div>
@@ -115,7 +109,7 @@ const grouped = categoryKeys.map((key) => ({
     display: grid;
     grid-template-columns: 80px 1fr auto;
     gap: 24px;
-    padding: 14px 0;
+    padding: 10px 0;
     border-bottom: 1px solid var(--border);
     align-items: baseline;
     transition: background-color 0.3s, opacity 0.15s;
@@ -174,7 +168,9 @@ const grouped = categoryKeys.map((key) => ({
 
   .project .links {
     display: flex;
-    gap: 10px;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
     font-family: 'Geist Mono', ui-monospace, monospace;
     font-size: 11px;
     align-self: start;
