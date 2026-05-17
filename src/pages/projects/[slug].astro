@@ -34,7 +34,7 @@ function gitLastUpdated(projectId: string): string | null {
   }
 }
 
-const lastUpdated = gitLastUpdated(project.id) ?? project.data.writeupDate ?? null;
+const lastUpdated = gitLastUpdated(project.id) ?? project.data.lastUpdated ?? null;
 ---
 
 <BaseLayout

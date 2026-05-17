@@ -12,7 +12,7 @@ const projects = defineCollection({
     yearLabel: z.string(),
     live: z.string().url().optional(),
     repo: z.string().url().optional(),
-    writeupDate: z.string().optional(),
+    lastUpdated: z.string().optional(),
     draft: z.boolean().default(false),
   }),
 });

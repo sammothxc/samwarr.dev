@@ -43,7 +43,7 @@ year: "2026"
 yearLabel: "2026"
 live: "url" # optional
 repo: "url" # optional
-writeupDate: "2026-05-16"  # optional, only relevant if you write a body
+lastUpdated: "2026-05-16"  # optional, only relevant if you write a body
 draft: false  # optional, default: false
 ---
 
