@@ -1,11 +1,11 @@
 ---
-title: "HTTPedia"
-description: "Wikipedia proxy for vintage computers — serves HTML 3.2 with no JavaScript or CSS. URL-based state for preferences, image caching, multi-language subdomains. Hosted via Cloudflare tunnel."
+title: HTTPedia
+description: Wikipedia proxy for vintage computers — serves HTML 3.2 with no JavaScript or CSS. URL-based state for preferences, image caching, multi-language subdomains. Hosted via Cloudflare tunnel.
 category: software
 tags: [retro, web, proxy]
-year: "2024"
-live: "https://httpedia.samwarr.net"
-lastUpdated: "2024-09-12"
+year: Jan 2026
+live: https://httpedia.com
+repo: https://github.com/sammothxc/httpedia
 ---
 
 ## The problem

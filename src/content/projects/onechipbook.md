@@ -1,10 +1,10 @@
 ---
-title: "OneChipBook-12 FPGA platform"
-description: "Multi-CPU swappable architecture on an Altera Cyclone I. VGA, PS/2 keyboard, and audio bring-up complete; working toward a fully usable retro computing platform."
+title: OneChipBook-12 FPGA platform
+description: Multi-CPU swappable architecture on an Altera Cyclone I. VGA, PS/2 keyboard, and audio bring-up complete; working toward a fully usable retro computing platform.
 category: hardware
 tags: [fpga, verilog, retro]
-year: "ongoing"
-lastUpdated: "2025-11-01"
+year: ongoing
+repo: https://github.com/sammothxc/onechipbook-dev
 ---
 
 ## Where this is going
