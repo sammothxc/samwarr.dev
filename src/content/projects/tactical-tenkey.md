@@ -2,7 +2,7 @@
 title: Tactical Tenkey
 description: Custom mechanical tenkey calculator that doubles as a USB/BT numpad with acrylic faceplates machined on my 3018 Pro CNC. Tactical Tenkey is powered by a Seeed XIAO ESP32S3, runs on a 18650 battery, and has hot-swappable switch sockets. I also host a web app to flash the latest firmware using an embedded ESP Web Tool.
 category: hardware
-tags: [keyboard, cnc, esp32]
+tags: [keyboard, cnc, esp32, calculator]
 year: Feb 2026
 live: https://t2.samwarr.dev
 repo: https://github.com/sammothxc/tactical-tenkey
