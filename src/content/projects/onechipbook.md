@@ -6,4 +6,3 @@ tags: [fpga, verilog, retro]
 year: ongoing
 repo: https://github.com/sammothxc/onechipbook-dev
 ---
-
