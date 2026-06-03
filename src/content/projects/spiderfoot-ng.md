@@ -4,4 +4,5 @@ description: spiderfoot-ng is an open-source intelligence (OSINT) automation too
 category: cybersecurity
 tags: [python, web, osint]
 year: Jun 2026
+repo: https://github.com/sammothxc/spiderfoot-ng
 ---
