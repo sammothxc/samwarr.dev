@@ -1,5 +1,7 @@
 # samwarr.dev
 
+[![Status](https://status.samwarr.dev/api/badge/11/status)](https://status.samwarr.dev)
+
 ## Structure
 
 ```
